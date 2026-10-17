@@ -1,0 +1,45 @@
+@WebMinimalApiPracticeV2_HostAddress = https://localhost:7003
+
+
+@id=0
+GET {{WebMinimalApiPracticeV2_HostAddress}}/authors/4?id={{id}}
+
+###
+
+GET {{WebMinimalApiPracticeV2_HostAddress}}/authors
+
+###
+
+POST {{WebMinimalApiPracticeV2_HostAddress}}/authors
+Content-Type: application/json
+
+{
+  "name": "Александр Пушкин",
+  "age": 37,
+  "books": [
+    {
+      "title": "Евгений Онегин",
+      "publishedYear": 1833
+    }
+  ]
+}
+
+###
+
+### без books → 400
+POST {{WebMinimalApiPracticeV2_HostAddress}}/authors
+Content-Type: application/json
+
+{ "name": "Тест", "age": 30 }
+
+### пустое имя → 400
+POST {{WebMinimalApiPracticeV2_HostAddress}}/authors
+Content-Type: application/json
+
+{ "name": "", "age": 30, "books": [] }
+
+### PUT с отрицательным возрастом → 400
+PUT {{WebMinimalApiPracticeV2_HostAddress}}/authors/1
+Content-Type: application/json
+
+{ "name": "Тест", "age": -5, "books": [] }
