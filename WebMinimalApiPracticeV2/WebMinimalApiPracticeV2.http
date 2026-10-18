@@ -1,8 +1,8 @@
 @WebMinimalApiPracticeV2_HostAddress = https://localhost:7003
 
 
-@id=0
-GET {{WebMinimalApiPracticeV2_HostAddress}}/authors/4?id={{id}}
+@id=8
+GET {{WebMinimalApiPracticeV2_HostAddress}}/authors/{{id}}?id={{id}}
 
 ###
 
