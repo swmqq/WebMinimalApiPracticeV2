@@ -1,15 +1,11 @@
 @WebMinimalApiPracticeV2_HostAddress = https://localhost:7003
 
+### ===== 1. Успешные сценарии =====
 
-@id=8
-GET {{WebMinimalApiPracticeV2_HostAddress}}/authors/{{id}}?id={{id}}
-
-###
-
+### 200: список авторов (на чистой базе вернётся [])
 GET {{WebMinimalApiPracticeV2_HostAddress}}/authors
 
-###
-
+### 201: создать автора с книгой (запусти первым, получится id=1)
 POST {{WebMinimalApiPracticeV2_HostAddress}}/authors
 Content-Type: application/json
 
@@ -17,29 +13,166 @@ Content-Type: application/json
   "name": "Александр Пушкин",
   "age": 37,
   "books": [
-    {
-      "title": "Евгений Онегин",
-      "publishedYear": 1833
-    }
+    { "title": "Евгений Онегин", "publishedYear": 1833 }
   ]
 }
 
-###
+### 201: автор с пустым списком книг
+POST {{WebMinimalApiPracticeV2_HostAddress}}/authors
+Content-Type: application/json
 
-### без books → 400
+{ "name": "Лев Толстой", "age": 82, "books": [] }
+
+### 200: автор по id
+GET {{WebMinimalApiPracticeV2_HostAddress}}/authors/1
+
+### 404: автора нет
+GET {{WebMinimalApiPracticeV2_HostAddress}}/authors/999
+
+### 200: обновить книгу (id книги = 1) и имя
+PUT {{WebMinimalApiPracticeV2_HostAddress}}/authors/1
+Content-Type: application/json
+
+{
+  "name": "А. С. Пушкин",
+  "age": 37,
+  "books": [
+    { "id": 1, "title": "Евгений Онегин (изд. 2)", "publishedYear": 1833 }
+  ]
+}
+
+### 200: добавить новую книгу (поля id нет)
+PUT {{WebMinimalApiPracticeV2_HostAddress}}/authors/1
+Content-Type: application/json
+
+{
+  "name": "А. С. Пушкин",
+  "age": 37,
+  "books": [
+    { "title": "Капитанская дочка", "publishedYear": 1836 }
+  ]
+}
+
+### ===== 2. Валидация POST: ожидаем 400 =====
+
+### 400: нет поля books -> errors.books
 POST {{WebMinimalApiPracticeV2_HostAddress}}/authors
 Content-Type: application/json
 
 { "name": "Тест", "age": 30 }
 
-### пустое имя → 400
+### 400: пустое имя -> errors.name
 POST {{WebMinimalApiPracticeV2_HostAddress}}/authors
 Content-Type: application/json
 
 { "name": "", "age": 30, "books": [] }
 
-### PUT с отрицательным возрастом → 400
+### 400: имя из пробелов -> errors.name
+POST {{WebMinimalApiPracticeV2_HostAddress}}/authors
+Content-Type: application/json
+
+{ "name": "   ", "age": 30, "books": [] }
+
+### 400: нет поля name -> errors.name
+POST {{WebMinimalApiPracticeV2_HostAddress}}/authors
+Content-Type: application/json
+
+{ "age": 30, "books": [] }
+
+### 400: возраст 0 -> errors.age
+POST {{WebMinimalApiPracticeV2_HostAddress}}/authors
+Content-Type: application/json
+
+{ "name": "Тест", "age": 0, "books": [] }
+
+### 400: возраст отрицательный -> errors.age
+POST {{WebMinimalApiPracticeV2_HostAddress}}/authors
+Content-Type: application/json
+
+{ "name": "Тест", "age": -5, "books": [] }
+
+### 400: возраст больше 120 -> errors.age
+POST {{WebMinimalApiPracticeV2_HostAddress}}/authors
+Content-Type: application/json
+
+{ "name": "Тест", "age": 121, "books": [] }
+
+### 400: книга без названия -> errors["books[0].title"]
+POST {{WebMinimalApiPracticeV2_HostAddress}}/authors
+Content-Type: application/json
+
+{ "name": "Тест", "age": 30, "books": [ { "title": "", "publishedYear": 2000 } ] }
+
+### 400: год книги 0 -> errors["books[0].publishedYear"]
+POST {{WebMinimalApiPracticeV2_HostAddress}}/authors
+Content-Type: application/json
+
+{ "name": "Тест", "age": 30, "books": [ { "title": "Книга", "publishedYear": 0 } ] }
+
+### 400: год книги в будущем -> errors["books[0].publishedYear"]
+POST {{WebMinimalApiPracticeV2_HostAddress}}/authors
+Content-Type: application/json
+
+{ "name": "Тест", "age": 30, "books": [ { "title": "Книга", "publishedYear": 2999 } ] }
+
+### 400: ошибка во второй книге -> errors["books[1].title"], у books[0] ошибок нет
+POST {{WebMinimalApiPracticeV2_HostAddress}}/authors
+Content-Type: application/json
+
+{
+  "name": "Тест",
+  "age": 30,
+  "books": [
+    { "title": "Нормальная", "publishedYear": 2000 },
+    { "title": " ", "publishedYear": 2000 }
+  ]
+}
+
+### 400: сразу все ошибки (name, age, books[0].title, books[0].publishedYear)
+POST {{WebMinimalApiPracticeV2_HostAddress}}/authors
+Content-Type: application/json
+
+{ "name": "", "age": 0, "books": [ { "title": "", "publishedYear": 0 } ] }
+
+### 400: неверный тип поля (ошибку даёт разбор JSON, а не валидатор)
+POST {{WebMinimalApiPracticeV2_HostAddress}}/authors
+Content-Type: application/json
+
+{ "name": "Тест", "age": "тридцать", "books": [] }
+
+### ===== 3. Валидация и ошибки PUT =====
+
+### 400: PUT без books -> errors.books
+PUT {{WebMinimalApiPracticeV2_HostAddress}}/authors/1
+Content-Type: application/json
+
+{ "name": "Тест", "age": 30 }
+
+### 400: PUT с отрицательным возрастом -> errors.age
 PUT {{WebMinimalApiPracticeV2_HostAddress}}/authors/1
 Content-Type: application/json
 
 { "name": "Тест", "age": -5, "books": [] }
+
+### 400: чужая или несуществующая книга -> message "Книга 999 не найдена у автора 1"
+PUT {{WebMinimalApiPracticeV2_HostAddress}}/authors/1
+Content-Type: application/json
+
+{ "name": "Тест", "age": 30, "books": [ { "id": 999, "title": "X", "publishedYear": 2000 } ] }
+
+### 404: PUT несуществующего автора с корректным телом
+PUT {{WebMinimalApiPracticeV2_HostAddress}}/authors/999
+Content-Type: application/json
+
+{ "name": "Тест", "age": 30, "books": [] }
+
+### ===== 4. Удаление (запускай в конце) =====
+
+### 204: удалить автора вместе с книгами
+DELETE {{WebMinimalApiPracticeV2_HostAddress}}/authors/1
+
+### 404: повторное удаление
+DELETE {{WebMinimalApiPracticeV2_HostAddress}}/authors/1
+
+### 404: после удаления автора нет
+GET {{WebMinimalApiPracticeV2_HostAddress}}/authors/1

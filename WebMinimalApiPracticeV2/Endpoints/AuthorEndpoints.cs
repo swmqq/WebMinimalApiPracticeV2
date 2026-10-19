@@ -1,8 +1,8 @@
-﻿using System.Runtime.CompilerServices;
-using WebMinimalApiPracticeV2.Data;
+﻿using WebMinimalApiPracticeV2.Data;
 using WebMinimalApiPracticeV2.Data.Entities;
 using WebMinimalApiPracticeV2.Dtos;
 using Microsoft.EntityFrameworkCore;
+using WebMinimalApiPracticeV2.Validation;
 
 namespace WebMinimalApiPracticeV2.Endpoints
 {
@@ -76,10 +76,11 @@ namespace WebMinimalApiPracticeV2.Endpoints
         //добавить нового автора
         private static async Task<IResult> CreateAuthor(AuthorCreateDto dto, ApiDbContext db)
         {
-            var error = ValidateAuthor(dto.Name, dto.Age, dto.Books is null);
-            if (error is not null)
+            var errors = AuthorValidator.Validate(dto.Name, dto.Age, 
+                dto.Books?.Select(b => (b.Title, b.PublishedYear)));
+            if (errors.Count > 0)
             {
-                return Results.BadRequest(new { Message = error });
+                return Results.ValidationProblem(errors);
             }
 
             var author = new AuthorEntity
@@ -111,10 +112,11 @@ namespace WebMinimalApiPracticeV2.Endpoints
         //обновить автора
         private static async Task<IResult> UpdateAuthor(int id, AuthorUpdateDto dto, ApiDbContext db)
         {
-            var error = ValidateAuthor(dto.Name, dto.Age, dto.Books is null);
-            if (error is not null)
+            var errors = AuthorValidator.Validate(dto.Name, dto.Age, 
+                dto.Books?.Select(b => (b.Title, b.PublishedYear)));
+            if (errors.Count > 0)
             {
-                return Results.BadRequest(new { Message = error });
+                return Results.ValidationProblem(errors);
             }
 
             var author = await db.Authors
@@ -163,15 +165,6 @@ namespace WebMinimalApiPracticeV2.Endpoints
                 author.Age,
                 Books = author.Books.Select(b => new { b.Id, b.Title, b.PublishedYear })
             });
-        }
-
-        private static string? ValidateAuthor(string Name, int Age, bool BookIsNull)
-        {
-
-            if (BookIsNull) return "Поле books обязательно!";
-            if (string.IsNullOrWhiteSpace(Name)) return "Укажите имя!";
-            if (Age <= 0) return "Укажите корреткный возраст!";
-            return null;
         }
     }
 }
