@@ -38,8 +38,8 @@ WebMinimalApiPracticeV2/
 Нужен [.NET 10 SDK](https://dotnet.microsoft.com/download).
 
 ```bash
-git clone <ссылка-на-репозиторий>
-cd <папка-репозитория>/WebMinimalApiPracticeV2
+git clone https://github.com/swmqq/WebMinimalApiPracticeV2.git
+cd WebMinimalApiPracticeV2
 
 # один раз: инструмент миграций
 dotnet tool install --global dotnet-ef
@@ -237,7 +237,7 @@ curl -X POST http://localhost:5231/authors \
 
 ## Telegram-бот
 
-Бот на Python работает с этим API: `<ссылка-на-репозиторий-бота>`.
+Бот на Python работает с этим API: `https://github.com/swmqq/telegram-bot-api`.
 
 ## Планы
 
